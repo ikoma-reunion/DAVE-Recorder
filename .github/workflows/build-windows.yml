@@ -27,7 +27,7 @@ jobs:
         env:
           PYTHONPATH: src
         run: |
-          uv run --with nuitka python -m nuitka --onefile --windows-console-mode=disable --enable-plugin=pyside6 src/gui/main.py -o dave-recorder.exe
+          uv run --with nuitka python -m nuitka --assume-yes-for-downloads --onefile --windows-console-mode=disable --enable-plugin=pyside6 src/gui/main.py -o dave-recorder.exe
 
       - name: Update nightly tag
         run: |
