@@ -3,8 +3,8 @@ import time
 import logging
 import threading
 from datetime import datetime
-from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
-                               QLabel, QListWidget, QListWidgetItem, QScrollArea, 
+from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+                               QLabel, QListWidget, QListWidgetItem, QScrollArea,
                                QGridLayout, QMessageBox, QPushButton, QFrame)
 from PySide6.QtCore import Qt, Slot, QTimer, Signal
 from PySide6.QtGui import QFont
@@ -122,7 +122,7 @@ class MainWindow(QMainWindow):
                 if user_id in self.video_manager.user_filepaths:
                     new_video_filename = self._generate_filepath(user_id, "h264", "_ongoing")
                     self.video_manager.rename_user(user_id, new_video_filename)
-                
+
         if user_id in self.unresolved_packets:
             import logging
             logging.getLogger(__name__).info(f"Flushing {len(self.unresolved_packets[user_id])} buffered packets for resolved user {user_id}")
@@ -135,7 +135,7 @@ class MainWindow(QMainWindow):
         to_close = []
         to_end_segment = []
         mode = self.settings.get("recording_mode", "split")
-        
+
         for user_id, last_seen in list(self.writer_last_seen.items()):
             if now - last_seen > 1.5:
                 self.on_user_speaking(user_id, False)
@@ -143,10 +143,10 @@ class MainWindow(QMainWindow):
                     to_close.append(user_id)
                 else:
                     to_end_segment.append(user_id)
-                
+
         for user_id in to_close:
             self._close_writer(user_id)
-            
+
         for user_id in to_end_segment:
             if user_id in self.writers and self.writers[user_id].get('segment_active', False):
                 self.writers[user_id]['segment_active'] = False
@@ -164,15 +164,15 @@ class MainWindow(QMainWindow):
         if user_id in self.writers:
             w_info = self.writers[user_id]
             w_info['writer'].close()
-            
+
             old_filename = w_info['filename']
             new_filename = old_filename.replace("_ongoing.opus", f"-{end_time_str}.opus")
-            
+
             try:
                 if os.path.exists(old_filename):
                     os.rename(old_filename, new_filename)
                     logger.info(f"Closed and renamed recording for {user_id}: {new_filename}")
-                    
+
                     mode = self.settings.get("recording_mode", "split")
                     if mode == "append" and 'segments' in w_info and w_info['segments']:
                         import json
@@ -181,9 +181,9 @@ class MainWindow(QMainWindow):
                             json.dump(w_info['segments'], jf, separators=(',', ':'))
             except Exception as e:
                 logger.error(f"Failed to rename file {old_filename}: {e}")
-                
+
             del self.writers[user_id]
-            
+
         if user_id in self.writer_last_seen:
             del self.writer_last_seen[user_id]
 
@@ -200,11 +200,11 @@ class MainWindow(QMainWindow):
     def init_ui(self):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        
+
         main_layout = QHBoxLayout(central_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
-        
+
         server_bar = QFrame()
         server_bar.setFixedWidth(72)
         server_bar.setStyleSheet("background-color: #1E1F22;")
@@ -212,7 +212,7 @@ class MainWindow(QMainWindow):
         server_layout.setContentsMargins(12, 12, 12, 12)
         server_layout.setSpacing(8)
         server_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        
+
         home_btn = QPushButton("DR")
         home_btn.setFixedSize(48, 48)
         home_btn.setStyleSheet("""
@@ -228,7 +228,7 @@ class MainWindow(QMainWindow):
             }
         """)
         server_layout.addWidget(home_btn)
-        
+
         separator = QFrame()
         separator.setFixedHeight(2)
         separator.setStyleSheet("background-color: #35363C; border-radius: 1px; margin: 0 8px;")
@@ -236,14 +236,14 @@ class MainWindow(QMainWindow):
 
         self.server_layout = server_layout
         main_layout.addWidget(server_bar)
-        
+
         sidebar = QFrame()
         sidebar.setFixedWidth(240)
         sidebar.setStyleSheet("background-color: #2B2D31;")
         sidebar_layout = QVBoxLayout(sidebar)
         sidebar_layout.setContentsMargins(0, 0, 0, 0)
         sidebar_layout.setSpacing(0)
-        
+
         sidebar_header = QFrame()
         sidebar_header.setFixedHeight(48)
         sidebar_header.setStyleSheet("border-bottom: 1px solid #1E1F22;")
@@ -253,40 +253,40 @@ class MainWindow(QMainWindow):
         sidebar_title.setStyleSheet("color: white;")
         sidebar_header_layout.addWidget(sidebar_title)
         sidebar_layout.addWidget(sidebar_header)
-        
+
         self.instance_list = QListWidget()
         self.instance_list.setStyleSheet("""
-            QListWidget { 
-                border: none; 
-                background-color: transparent; 
+            QListWidget {
+                border: none;
+                background-color: transparent;
                 padding: 8px;
             }
-            QListWidget::item { 
-                padding: 6px 8px; 
-                border-radius: 4px; 
+            QListWidget::item {
+                padding: 6px 8px;
+                border-radius: 4px;
                 color: #949BA4;
                 font-family: "Segoe UI";
                 font-size: 14px;
             }
-            QListWidget::item:selected { 
-                background-color: #404249; 
+            QListWidget::item:selected {
+                background-color: #404249;
                 color: white;
             }
-            QListWidget::item:hover:!selected { 
-                background-color: #35373C; 
+            QListWidget::item:hover:!selected {
+                background-color: #35373C;
                 color: #DBDEE1;
             }
         """)
         self.instance_list.itemClicked.connect(self.on_instance_selected)
         sidebar_layout.addWidget(self.instance_list)
-        
+
         sidebar_footer = QFrame()
         sidebar_footer.setFixedHeight(84)
         sidebar_footer.setStyleSheet("background-color: #232428;")
         footer_layout = QVBoxLayout(sidebar_footer)
         footer_layout.setContentsMargins(8, 8, 8, 8)
         footer_layout.setSpacing(4)
-        
+
         self.mute_btn = QPushButton("🔊 Global Unmuted")
         self.mute_btn.setFixedHeight(32)
         self.mute_btn.setStyleSheet("""
@@ -305,10 +305,10 @@ class MainWindow(QMainWindow):
         self.mute_btn.setProperty("muted", False)
         self.mute_btn.clicked.connect(self.toggle_global_mute)
         footer_layout.addWidget(self.mute_btn)
-        
+
         btn_layout = QHBoxLayout()
         btn_layout.setContentsMargins(0, 0, 0, 0)
-        
+
         refresh_btn = QPushButton("Refresh")
         refresh_btn.setFixedHeight(32)
         refresh_btn.setStyleSheet("""
@@ -325,7 +325,7 @@ class MainWindow(QMainWindow):
             }
         """)
         refresh_btn.clicked.connect(self.refresh_instances)
-        
+
         settings_btn = QPushButton("Settings")
         settings_btn.setFixedHeight(32)
         settings_btn.setStyleSheet("""
@@ -342,20 +342,20 @@ class MainWindow(QMainWindow):
             }
         """)
         settings_btn.clicked.connect(self.open_settings)
-        
+
         btn_layout.addWidget(refresh_btn)
         btn_layout.addWidget(settings_btn)
         footer_layout.addLayout(btn_layout)
         sidebar_layout.addWidget(sidebar_footer)
-        
+
         main_layout.addWidget(sidebar)
-        
+
         main_area = QFrame()
         main_area.setStyleSheet("background-color: #313338;")
         main_area_layout = QVBoxLayout(main_area)
         main_area_layout.setContentsMargins(0, 0, 0, 0)
         main_area_layout.setSpacing(0)
-        
+
         main_header = QFrame()
         main_header.setFixedHeight(48)
         main_header.setStyleSheet("border-bottom: 1px solid #1E1F22;")
@@ -366,7 +366,7 @@ class MainWindow(QMainWindow):
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_header_layout.addWidget(self.status_label)
         main_area_layout.addWidget(main_header)
-        
+
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setStyleSheet("""
@@ -384,14 +384,14 @@ class MainWindow(QMainWindow):
                 margin: 2px;
             }
         """)
-        
+
         self.grid_widget = QWidget()
         self.grid_layout = QGridLayout(self.grid_widget)
         self.grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self.grid_layout.setSpacing(16)
         self.grid_layout.setContentsMargins(24, 24, 24, 24)
         scroll.setWidget(self.grid_widget)
-        
+
         main_area_layout.addWidget(scroll)
         main_layout.addWidget(main_area)
 
@@ -412,7 +412,7 @@ class MainWindow(QMainWindow):
             item = QListWidgetItem(f"# {inst.flavor} (PID: {inst.voice_pid})")
             item.setData(Qt.ItemDataRole.UserRole, idx)
             self.instance_list.addItem(item)
-            
+
     def open_settings(self):
         dialog = SettingsDialog(self)
         dialog.exec()
@@ -423,14 +423,14 @@ class MainWindow(QMainWindow):
             if idx is None:
                 return
             inst = self.instances[idx]
-            
+
             if self.frida_manager and self.frida_manager.running:
                 self.frida_manager.stop()
                 self._close_all_writers()
-                
+
             self.status_label.setText(f"Connected: {inst.flavor} Voice Channel")
-            
-            for i in reversed(range(self.grid_layout.count())): 
+
+            for i in reversed(range(self.grid_layout.count())):
                 layout_item = self.grid_layout.itemAt(i)
                 if layout_item:
                     widget = layout_item.widget()
@@ -440,17 +440,20 @@ class MainWindow(QMainWindow):
             self.ssrc_map.clear()
             self.unmapped_ssrcs.clear()
             self.recent_speakers.clear()
-            
-            scripts_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'src', 'frida_scripts')
+
+            if '__compiled__' in globals() or getattr(sys, 'frozen', False):
+                scripts_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'src', 'frida_scripts')
+            else:
+                scripts_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'src', 'frida_scripts')
             self.frida_manager = FridaManager(inst.voice_pid, scripts_dir)
-            
+
             self.frida_manager.user_mapped.connect(self.on_user_mapped)
             self.frida_manager.user_speaking.connect(self.on_user_speaking)
             self.frida_manager.user_disconnected.connect(self.on_user_disconnected)
             self.frida_manager.packet_received.connect(self.on_packet_received)
             self.frida_manager.video_decoder_frame.connect(self.on_video_decoder_frame)
             self.frida_manager.error_occurred.connect(self.on_error)
-            
+
             self.frida_manager.start()
         except Exception as e:
             import traceback
@@ -482,7 +485,7 @@ class MainWindow(QMainWindow):
     def on_user_mapped(self, ssrc, user_id):
         if ssrc > 0:
             self.ssrc_map[ssrc] = user_id
-            
+
         if user_id not in self.user_cards:
             from gui.user_card import UserCard
             card = UserCard(user_id, ssrc=ssrc)
@@ -510,7 +513,7 @@ class MainWindow(QMainWindow):
             card = self.user_cards[user_id]
             if card.is_disconnected:
                 card.set_disconnected(False)
-                
+
         if is_speaking:
             # For append mode: Record segment start
             if user_id in self.writers:
@@ -534,15 +537,15 @@ class MainWindow(QMainWindow):
     def _generate_filepath(self, user_id, extension, suffix=""):
         base_dir = os.path.abspath(str(self.settings.get("save_directory")))
         fmt = str(self.settings.get("filename_format"))
-        
+
         # Remove any default extension from the format if present
         if fmt.endswith(".opus"):
             fmt = fmt[:-5]
         elif fmt.endswith(".h264"):
             fmt = fmt[:-5]
-            
+
         fmt = f"{fmt}{suffix}.{extension}"
-        
+
         now = datetime.now()
         card = self.user_cards.get(user_id) if hasattr(self, 'user_cards') else None
         uname = card.username if card else user_id
@@ -551,7 +554,7 @@ class MainWindow(QMainWindow):
             uname = user_id
         if gname.startswith("Unknown ("):
             gname = user_id
-            
+
         formatted = fmt.format(
             user_id=user_id,
             username=uname.lstrip('@'),
@@ -565,7 +568,7 @@ class MainWindow(QMainWindow):
     def on_packet_received(self, ssrc, payload):
         if payload == b"\xf8\xff\xfe":
             return
-            
+
         if ssrc not in self.ssrc_map:
             if ssrc not in self.unmapped_packets:
                 self.unmapped_packets[ssrc] = []
@@ -573,16 +576,16 @@ class MainWindow(QMainWindow):
             if len(self.unmapped_packets[ssrc]) > 500:
                 self.unmapped_packets[ssrc].pop(0)
             return
-            
+
         user_id = self.ssrc_map[ssrc]
-            
+
         card = self.user_cards.get(user_id)
         if card and not card.is_recording:
             return
-            
+
         if card and not card.is_speaking:
             self.on_user_speaking(user_id, True)
-            
+
         if self.settings.get("resolve_user_info_via_api") and user_id not in self.resolver.cache:
             if user_id not in self.unresolved_packets:
                 self.unresolved_packets[user_id] = []
@@ -590,35 +593,35 @@ class MainWindow(QMainWindow):
             if len(self.unresolved_packets[user_id]) > 1000:
                 self.unresolved_packets[user_id].pop(0)
             return
-            
+
         self._process_packet(user_id, ssrc, payload)
 
     def _process_packet(self, user_id, ssrc, payload):
         self.writer_last_seen[user_id] = time.time()
-            
+
         if user_id not in self.writers:
             filepath = self._generate_filepath(user_id, "opus", "_ongoing")
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
-            
+
             logger.info(f"Started new recording session for user {user_id} at {filepath}")
             self.writers[user_id] = {
                 'writer': OggOpusWriter(filepath, ssrc),
                 'filename': filepath,
                 'start_time': datetime.now().strftime("%H%M%S")
             }
-            
+
             if self.settings.get("record_video", True):
                 v_filepath = self._generate_filepath(user_id, "h264", "_ongoing")
                 os.makedirs(os.path.dirname(v_filepath), exist_ok=True)
                 self.video_manager.set_user_filepath(user_id, v_filepath)
-            
+
         if self.settings.get("recording_mode", "split") == "append":
             if 'segments' not in self.writers[user_id]:
                 self.writers[user_id]['segments'] = []
             if not self.writers[user_id].get('segment_active', False):
                 self.writers[user_id]['segment_active'] = True
                 self.writers[user_id]['current_segment_start'] = int(time.time() * 1000)
-            
+
         self.writers[user_id]['writer'].write_packet(payload)
         AudioMixer.get_instance().add_packet(user_id, payload)
 
